@@ -8,7 +8,20 @@
   html,body{margin:0;padding:0;overflow:hidden;background:#04081e;font-family:system-ui,Segoe UI,Arial,sans-serif}
   #hud{position:fixed;top:14px;left:14px;z-index:10;background:rgba(8,12,28,.84);border:1px solid #34406e;
        border-radius:12px;padding:13px 16px;color:#dce4ff;max-width:330px;backdrop-filter:blur(6px)}
-  #hud h1{font-size:14.5px;margin:0 0 2px;color:#ffd98a}
+  #hud h1{font-size:14.5px;margin:0;color:#ffd98a}
+  #hudHead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  #hud #btnMin{padding:1px 10px;font-size:15px;line-height:1.3;flex:0 0 auto}
+  #hud.min #hudBody{display:none}
+  #hud.min{padding:8px 12px;max-width:240px}
+  #hud.min h1{font-size:12px}
+  @media (max-width:640px){
+    #hud{max-width:235px;padding:9px 11px}
+    #hud h1{font-size:11.5px}
+    #hud p{font-size:10px}
+    #hud button{padding:4px 8px;font-size:11px}
+    .sld label{font-size:11px}
+    #hint{display:none}
+  }
   #hud p{font-size:11.5px;margin:5px 0;line-height:1.4;color:#aab6e0}
   #hud .btns{display:flex;gap:7px;margin:9px 0 4px;flex-wrap:wrap}
   #hud button{background:#1d2a52;color:#e8edff;border:1px solid #44549a;border-radius:8px;
@@ -25,7 +38,11 @@
 </head>
 <body>
 <div id="hud">
-  <h1>Terraza — modelo 3D a escala (4.00 × 9.24 m)</h1>
+  <div id="hudHead">
+    <h1>Terraza — 3D a escala (4.00 × 9.24 m)</h1>
+    <button id="btnMin" title="minimizar/expandir">—</button>
+  </div>
+  <div id="hudBody">
   <div class="btns">
     <button id="btnOrbit" class="on">🔄 Orbital</button>
     <button id="btnWalk">🚶 Recorrido</button>
@@ -45,6 +62,7 @@
   </div>
   <p id="modeHelp">Arrastrá = rotar · rueda = zoom · click derecho = desplazar</p>
   <p>N = derecha · fondo = Oeste · de noche la mesa ratona se vuelve fogón 🔥</p>
+  </div>
 </div>
 <div id="hint">Medidas en el bloque <b>DIM</b> del archivo · pérgola bioclimática con ruedas: movela con la barrita</div>
 
@@ -673,6 +691,16 @@ const rngAspas = document.getElementById('rngAspas');
 const outHora  = document.getElementById('outHora');
 const outPerg  = document.getElementById('outPerg');
 const outAspas = document.getElementById('outAspas');
+
+/* minimizar panel — en pantallas chicas arranca minimizado */
+const hudEl = document.getElementById('hud');
+const btnMin = document.getElementById('btnMin');
+function setMin(min){
+  hudEl.classList.toggle('min', min);
+  btnMin.textContent = min ? '+' : '—';
+}
+btnMin.onclick = () => setMin(!hudEl.classList.contains('min'));
+if(Math.min(innerWidth, innerHeight) < 700 && innerWidth < 900) setMin(true);
 
 btnWalk.onclick  = () => plc.lock();
 btnOrbit.onclick = () => plc.unlock();
