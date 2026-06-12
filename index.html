@@ -54,7 +54,7 @@
   </div>
   <div class="sld">
     <label>↔️ Pérgola (ruedas) <span id="outPerg">al fondo</span></label>
-    <input id="rngPerg" type="range" min="0" max="4.1" step="0.02" value="0">
+    <input id="rngPerg" type="range" min="-0.33" max="4.1" step="0.02" value="0">
   </div>
   <div class="sld">
     <label>🍃 Aspas bioclimáticas <span id="outAspas">70% abiertas</span></label>
@@ -460,8 +460,11 @@ box(0.12, DIM.hParedIzq, 3.85, chapaMat(3.85, DIM.hParedIzq), -0.06, DIM.hParedI
 box(0.16, 0.06, 3.9, M.stuccoCap, -0.06, DIM.hParedIzq+0.03, 3.85/2);
 box(0.12, DIM.hParedIzqFte, D-3.85, chapaMat(D-3.85, DIM.hParedIzqFte), -0.06, DIM.hParedIzqFte/2, (3.85+D)/2);
 box(0.16, 0.06, D-3.8, M.stuccoCap, -0.06, DIM.hParedIzqFte+0.03, (3.85+D)/2);
-box(W+0.24, DIM.hParedFondo, 0.12, chapaMat(W+0.24, DIM.hParedFondo), W/2, DIM.hParedFondo/2, -0.06);
-box(W+0.3, 0.06, 0.16, M.stuccoCap, W/2, DIM.hParedFondo+0.03, -0.06);
+/* fondo: el primer metro (detrás de la parrilla) sube a altura completa y se une al techo — sin hueco */
+box(1.12, DIM.hParedIzq, 0.12, chapaMat(1.12, DIM.hParedIzq), 0.44, DIM.hParedIzq/2, -0.06);
+box(1.16, 0.06, 0.16, M.stuccoCap, 0.44, DIM.hParedIzq+0.03, -0.06);
+box(3.12, DIM.hParedFondo, 0.12, chapaMat(3.12, DIM.hParedFondo), 2.56, DIM.hParedFondo/2, -0.06);
+box(3.18, 0.06, 0.16, M.stuccoCap, 2.56, DIM.hParedFondo+0.03, -0.06);
 box(0.12, DIM.hParapeto, DIM.zLavadero, chapaMat(DIM.zLavadero, DIM.hParapeto), W+0.06, DIM.hParapeto/2, DIM.zLavadero/2);
 box(0.16, 0.06, DIM.zLavadero+0.05, M.stuccoCap, W+0.06, DIM.hParapeto+0.03, DIM.zLavadero/2);
 /* pared del fondo limpia: sin cerco ni plantas (pedido del usuario) */
@@ -992,7 +995,8 @@ function setLouvers(t){
 }
 function setPergola(v){
   pergola.position.z = v;
-  outPerg.textContent = v < 0.04 ? 'al fondo (sobre el sillón)' : '+' + v.toFixed(2) + ' m al frente';
+  outPerg.textContent = v < -0.25 ? 'tocando la pared del fondo'
+    : (v < 0.04 ? 'al fondo (sobre el sillón)' : '+' + v.toFixed(2) + ' m al frente');
 }
 function setSofa(v){
   buildSofa(v);
