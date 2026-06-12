@@ -132,8 +132,18 @@ orbit.target.set(1.35, 1.1, 1.2);
 orbit.enableDamping = true;
 orbit.maxPolarAngle = Math.PI*0.495;
 orbit.minDistance = 0.8; orbit.maxDistance = 24;
-orbit.zoomSpeed = 0.45;        // rueda más fina, con término medio
-orbit.zoomToCursor = true;     // el zoom va hacia donde apunta el mouse
+/* zoom de rueda propio: proporcional al delta y amortiguado — funciona igual
+   con rueda a clicks, rueda libre y touchpad (el pinch táctil sigue siendo nativo) */
+let zoomTarget = null, lastWheelT = -10;
+addEventListener('wheel', e => {
+  if(e.target !== renderer.domElement || !e.isTrusted) return;
+  e.preventDefault(); e.stopPropagation();
+  if(plc.isLocked) return;
+  const dy = e.deltaMode === 1 ? e.deltaY*33 : e.deltaY;
+  if(zoomTarget === null) zoomTarget = camera.position.distanceTo(orbit.target);
+  zoomTarget = THREE.MathUtils.clamp(zoomTarget * Math.pow(1.0009, dy), orbit.minDistance, orbit.maxDistance);
+  lastWheelT = clock.elapsedTime;
+}, { passive:false, capture:true });
 
 /* ---------- helpers ---------- */
 function canvasTex(w, h, draw){
@@ -547,8 +557,8 @@ box(0.012, 0.012, DIM.mesadaL-0.1, ledMat, DIM.mesadaProf+0.03, DIM.mesadaH-0.09
   warmPoints.push({ light:p, base:1.6 });
 });
 
-box(DIM.techoProf, DIM.soffitH, 0.14, M.pier, DIM.techoProf/2, DIM.soffitH/2, mz0-0.07);
-box(DIM.techoProf, 0.16, DIM.mesadaL+0.28, M.pier, DIM.techoProf/2, DIM.soffitH+0.08, (mz0+mz1)/2);
+/* el techo cocina apoya DIRECTO sobre la pared alta del fondo — esquina limpia de 2 paredes, sin panel extra */
+box(DIM.techoProf, 0.16, mz1+0.14, M.pier, DIM.techoProf/2, DIM.soffitH+0.08, (mz1+0.14)/2);
 const bsTex = canvasTex(256,256,(ctx,w,h)=>{
   ctx.fillStyle='#cfc0a8'; ctx.fillRect(0,0,w,h);
   grain(ctx,w,h,800,0.05);
@@ -891,7 +901,7 @@ dimension(V(1.98,0.06,DIM.zLavadero), V(1.98,0.06,D), '1.58 m', V(0.07,0,0), fal
 dimension(V(0,1.98,D-0.08),    V(2.07,1.98,D-0.08), 'pared 2.07 m', V(0,0.08,0), false, 0.26);
 dimension(V(1.1,DIM.mesadaH+0.05,mz0), V(1.1,DIM.mesadaH+0.05,mz1), 'mesada 3.20 m');
 dimension(V(1.0,0,3.95),       V(1.0,DIM.mesadaH,3.95), 'h 0.92 m', V(0.08,0,0));
-dimension(V(0.95,0,0.12),      V(0.95,DIM.soffitH,0.12), 'techo h 2.42 m', V(0.08,0,0));
+dimension(V(1.08,0,0.2),       V(1.08,DIM.soffitH,0.2), 'techo h 2.42 m', V(0.08,0,0));
 dimension(V(0,2.75,3.85),      V(DIM.techoProf,2.75,3.85), 'techo 1.00 m', V(0,0.1,0), false, 0.34);
 dimension(V(pg.x0,2.75,3.85),  V(pg.x1,2.75,3.85),  'pérgola 3.00 m', V(0,0.1,0), false, 0.34);
 dimension(V(W+0.3,2.75,pg.z0), V(W+0.3,2.75,pg.z1), '3.00 m', V(0,0.1,0));
@@ -1038,6 +1048,14 @@ renderer.setAnimationLoop(() => {
     if(camera.position.z > 7.45) camera.position.x = Math.min(camera.position.x, 1.9);
     camera.position.y = 1.62;
   } else {
+    if(zoomTarget !== null){
+      const d = camera.position.distanceTo(orbit.target);
+      const nd = THREE.MathUtils.lerp(d, zoomTarget, Math.min(1, dt*9));
+      if(Math.abs(nd-d) > 0.0005){
+        camera.position.sub(orbit.target).multiplyScalar(nd/Math.max(d,1e-6)).add(orbit.target);
+      }
+      if(clock.elapsedTime - lastWheelT > 0.6) zoomTarget = null;  // re-sincroniza tras pinch/pan
+    }
     orbit.update();
   }
   if(composer) composer.render(); else renderer.render(scene, camera);
